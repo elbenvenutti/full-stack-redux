@@ -1,16 +1,39 @@
 import {List, Map} from 'immutable';
 
+function getWinner (vote) {
+    if (!vote) {
+        return [];
+    }
+    const [a, b] = vote.get('pair').toJS();
+
+    const aVotes = vote.getIn(['tally', a]);
+    const bVotes = vote.getIn(['tally', b]);
+    if (aVotes > bVotes) {
+        return [a];
+    } else if (bVotes > aVotes) {
+        return [b];
+    } else {
+        return [a, b];
+    }
+}
+
 export function setEntries (state, entries) {
     return state.set('entries', List(entries));
 };
 
 export function next (state) {
-    const entries = state.get('entries');
+    const entries = state.get('entries').concat(getWinner(state.get('vote')));
 
-    return state.merge({
-        vote: Map({pair: entries.take(2)}),
-        entries: entries.skip(2)
-    });
+    if (entries.size === 1) {
+        return state.remove('vote')
+            .remove('entries')
+            .set('winner', entries.first());
+    } else {
+        return state.merge({
+            vote: Map({pair: entries.take(2)}),
+            entries: entries.skip(2)
+        });
+    }
 };
 
 export function vote (state, entry) {
