@@ -1,13 +1,10 @@
 'use strict';
 
 import React from 'react';
-import PureRenderMixin from 'react-addons-pure-render-mixin';
 import {connect} from 'react-redux';
-import Winner from './Winner';
+import winner from './Winner';
 
 export const Results = React.createClass({
-  mixins: [PureRenderMixin],
-
   getPair: function () {
     return this.props.pair || [];
   },
@@ -17,7 +14,7 @@ export const Results = React.createClass({
   },
 
   render: function () {
-    return this.props.winner ? <Winner ref="winner" winner={this.props.winner} /> : <div>
+    return this.props.winner ? winner(this.props).element : <div>
       {this.getPair().map(entry =>
         <div key={entry}>
           <h1>{entry}</h1>
@@ -40,3 +37,7 @@ const mapStateToProps = (state) => ({
 });
 
 export const ResultsContainer = connect(mapStateToProps)(Results);
+
+export const resultsContainer = () => ({
+  element: ResultsContainer
+});

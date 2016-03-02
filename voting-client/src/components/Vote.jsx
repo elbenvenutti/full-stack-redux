@@ -1,34 +1,21 @@
 'use strict';
 
 import React from 'react';
-import PureRenderMixin from 'react-addons-pure-render-mixin';
-import Entry from './Entry';
+import entryButton from './EntryButton';
 
-export default React.createClass({
-  mixins: [PureRenderMixin],
+export default (props) => {
+  const {pair, hasVoted, vote} = props;
 
-  getPair: function () {
-    return this.props.pair || [];
-  },
+  const voteFor = (entry) => () => vote(entry);
 
-  hasVotedFor: function(entry) {
-    return this.props.hasVoted === entry;
-  },
+  const element = <div>
+    {pair && pair.map(entry => entryButton({
+        entry,
+        voteForThis: voteFor(entry),
+        disabled: !!hasVoted,
+        hasVotedThisEntry: hasVoted === entry
+      }).element)}
+  </div>
 
-  voteFor: function(entry) {
-    return () => this.props.vote(entry);
-  },
-
-  render: function () {
-    return <div>
-      { this.getPair().map(entry =>
-                           <Entry
-                             key={entry}
-                             entry={entry}
-                             voteForThis={this.voteFor(entry)}
-                             disabled={!!this.props.hasVoted}
-                             hasVotedThisEntry={this.hasVotedFor(entry)} />
-        ) }
-    </div>;
-  }
-});
+  return {element};
+};
