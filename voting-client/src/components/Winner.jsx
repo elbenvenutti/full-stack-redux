@@ -1,7 +1,11 @@
 'use strict';
 
 import React from 'react';
+import {dom} from 'react-reactive-class';
 
-export default (props) => ({
-  element: <div ref="winner">Winner is {props.winner}!</div>
+const {div: Div, span: Span} = dom;
+
+export default winner$ => ({
+  element: <Div>Winner is <Span>{winner$}</Span>!</Div>,
+  events: {}
 });

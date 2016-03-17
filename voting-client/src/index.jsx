@@ -1,22 +1,42 @@
 'use strict';
 
-import React from 'react';
 import ReactDOM from 'react-dom';
-import {createStore, applyMiddleware} from 'redux';
 import io from 'socket.io-client';
-import reducer from './reducer';
-import {setState} from './action_creators';
-import remoteActionMiddleware from './remote_action_middleware';
+import {Subject, Observable} from 'rx';
 import app from './components/App';
-import {Provider} from 'react-redux';
+import * as actionCreators from './action_creators.js';
+import wrapIntoBehaviour from './utils/wrapIntoBehaviour';
+import reducer from './reducer';
+
+const createAppState = (initState, action$) =>
+  wrapIntoBehaviour(initState, action$.scan(reducer, initState));
+
+const appActions$ = new Subject();
+
+const appState$ = createAppState({
+  hash: location.hash
+}, appActions$);
+
+const hashChange$ = Observable.fromEvent(window, 'hashchange');
+hashChange$.subscribe(hash => appActions$.onNext(actionCreators.hashChange(location.hash)));
 
 const socket = io(`${location.protocol}//${location.hostname}:8090`);
-socket.on('state', state => store.dispatch(setState(state)));
+socket.on('state', state => appActions$.onNext(actionCreators.setState(state)));
 
-const createStoreWithMiddleware = applyMiddleware(remoteActionMiddleware(socket))(createStore);
-const store = createStoreWithMiddleware(reducer);
+appActions$.subscribe(action => {
+  if (action.meta && action.meta.remote) {
+    socket.emit('action', action);
+  }
+});
+
+const {element: App, events} = app(appState$);
+
+events.vote$ && events.vote$.subscribe(entry => {
+  appActions$.onNext(actionCreators.vote(entry));
+});
 
 ReactDOM.render(
-  app(store).element,
+  App,
   document.getElementById('app')
 );
+

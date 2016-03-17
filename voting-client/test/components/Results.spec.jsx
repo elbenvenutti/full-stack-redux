@@ -2,29 +2,32 @@
 
 import React from 'react';
 import ReactDOM from 'react-dom';
-import {renderIntoDocument, scryRenderedDOMComponentsWithTag, Simulate} from 'react-addons-test-utils';
-import {List, Map} from 'immutable';
-import {Results} from '../../src/components/Results';
+import {renderIntoDocument, findRenderedDOMComponentWithTag, scryRenderedDOMComponentsWithTag, Simulate} from 'react-addons-test-utils';
+import {results} from '../../src/components/Results';
 import {expect} from 'chai';
+import {BehaviorSubject} from 'rx';
 
 describe('Results', () => {
-  it('should invoke the next callback when next button is clicked', () => {
-    let nextInvoked = false;
-    const next = () => nextInvoked = true;
+  it('should notify when next button is clicked', () => {
+    let clicked = false;
 
-    const pair = List.of('a', 'b');
-    const component = renderIntoDocument(<Results pair={pair} tally={Map()} next={next} />);
+    const {element, events} = results(new BehaviorSubject({}));
+    events.next$.subscribe(() => clicked = true);
+    const component = renderIntoDocument(element);
 
-    Simulate.click(ReactDOM.findDOMNode(component.refs.next));
+    Simulate.click(findRenderedDOMComponentWithTag(component, 'button'));
 
-    expect(nextInvoked).to.be.true;
+    expect(clicked).to.be.true;
   });
 
   it('should render the winner when there is one', () => {
-    const component = renderIntoDocument(<Results winner="a" pair={['a', 'b']} tally={Map()} />);
-    const winner = ReactDOM.findDOMNode(component.refs.winner);
+    const component = renderIntoDocument(
+      results(new BehaviorSubject({winner: 'abc'})).element
+    );
 
-    expect(winner.textContent).to.contain('a');
+    const winner = findRenderedDOMComponentWithTag(component, 'span');
+    expect(winner).to.be.ok;
+    expect(winner.textContent).to.contain('abc');
   });
 });
 

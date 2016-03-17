@@ -1,43 +1,43 @@
 'use strict';
 
 import React from 'react';
-import {connect} from 'react-redux';
 import winner from './Winner';
+import {dom} from 'react-reactive-class';
+import {Subject} from 'rx';
+import wrapIntoBehaviour from '../utils/wrapIntoBehaviour.js';
 
-export const Results = React.createClass({
-  getPair: function () {
-    return this.props.pair || [];
-  },
+const {div: Div, h1: H1, button: Button} = dom;
 
-  getVotes: function (entry) {
-    return this.props.tally && this.props.tally.has(entry) ? this.props.tally.get(entry) : 0;
-  },
+export const results = (props$) => {
+  const next$ = new Subject();
 
-  render: function () {
-    return this.props.winner ? winner(this.props).element : <div>
-      {this.getPair().map(entry =>
-        <div key={entry}>
-          <h1>{entry}</h1>
-          <div>
-            {this.getVotes(entry)}
-          </div>
-        </div>
-      )}
-      <div>
-        <button ref="next" onClick={this.props.next}>Next</button>
+  const resultsElement = <Div>
+    <Div>
+    {props$.pluck('pair').map(pair => pair && pair.map(entry =>
+      <div key={entry}>
+        <h1>{entry}</h1>
+        <Div>
+          {props$.pluck('tally', entry) || 0}
+        </Div>
       </div>
-    </div>;
+      ))}
+    </Div>
+    <button onClick={next$.onNext.bind(next$)}>Next</button>
+  </Div>;
+
+  return {
+    element: <Div>
+      {props$.getValue().winner ? winner(props$.pluck('winner')).element : resultsElement}
+    </Div>,
+    events: {
+      next$
+    }
   }
-});
+};
 
-const mapStateToProps = (state) => ({
-  pair: state.getIn(['vote', 'pair']),
-  tally: state.getIn(['vote', 'tally']),
-  winner: state.get('winner')
-});
+export const resultsContainer = (state$) => results(wrapIntoBehaviour(null, state$.map(state => ({
+  pair: state.vote && state.vote.pair,
+  tally: state.vote && state.vote.tally,
+  winner: state.winner
+}))));
 
-export const ResultsContainer = connect(mapStateToProps)(Results);
-
-export const resultsContainer = () => ({
-  element: ResultsContainer
-});

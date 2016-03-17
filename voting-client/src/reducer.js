@@ -1,30 +1,30 @@
 'use strict';
 
-import {Map, List} from 'immutable';
+import {Observable} from 'rx';
 
-const setState = (state, newState) => state.merge(newState);
+const setState = (state, newState) => Object.assign(state, newState);
 
-const vote = (state, entry) => state.set('hasVoted', entry);
+const vote = (state, entry) => Object.assign(state, {hasVoted: entry});
 
 const resetVote = (state) => {
-  const hasVoted = state.get('hasVoted');
-  const currentPair = state.getIn(['vote', 'pair'], List());
+  const hasVoted = state.hasVoted;
+  const currentPair = state.vote.pair || [];
 
-  if (hasVoted && !currentPair.includes(hasVoted)) {
-    return state.remove('hasVoted');
-  } else {
-    return state;
+  if (hasVoted && currentPair.indexOf(hasVoted) === -1) {
+    delete(state.hasVoted);
   }
+
+  return state;
 };
 
-export default (state = Map(), action) => {
+export default (state = {}, action) => {
   switch (action.type) {
     case 'SET_STATE':
       return resetVote(setState(state, action.state));
-      break;
     case 'VOTE':
       return vote(state, action.entry);
-      break;
+  case 'HASH_CHANGE':
+      return Object.assign(state, {hash: action.hash});
   }
   return state;
 };

@@ -2,20 +2,34 @@
 
 import React from 'react';
 import entryButton from './EntryButton';
+import {dom} from 'react-reactive-class';
+import {Subject} from 'rx';
 
-export default (props) => {
-  const {pair, hasVoted, vote} = props;
+const {div: Div} = dom;
 
-  const voteFor = (entry) => () => vote(entry);
+export default (props$) => {
+  const pair$ = props$.pluck('pair');
+  const hasVoted$ = props$.pluck('hasVoted');
+  const vote$ = new Subject();
 
-  const element = <div>
-    {pair && pair.map(entry => entryButton({
+  const element = <Div>
+    {pair$.map(pair => pair && pair.map(entry => {
+      const {element: EntryButton, events} = entryButton({
         entry,
-        voteForThis: voteFor(entry),
-        disabled: !!hasVoted,
-        hasVotedThisEntry: hasVoted === entry
-      }).element)}
-  </div>
+        hasVoted$
+      });
 
-  return {element};
+      events.vote$.subscribe(() => {
+        vote$.onNext(entry);
+      })
+      return EntryButton;
+    }))}
+  </Div>
+
+  return {
+    element,
+    events: {
+      vote$
+    }
+  };
 };

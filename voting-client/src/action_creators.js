@@ -10,3 +10,8 @@ export const vote = (entry) => ({
   type: 'VOTE',
   entry
 });
+
+export const hashChange = (hash) => ({
+  type: 'HASH_CHANGE',
+  hash
+})
