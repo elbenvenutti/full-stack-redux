@@ -7,12 +7,10 @@ import {Subject} from 'rx';
 
 const {div: Div} = dom;
 
-export default (props$) => {
-  const pair$ = props$.pluck('pair');
-  const hasVoted$ = props$.pluck('hasVoted');
+export default ({pair$, hasVoted$}) => {
   const vote$ = new Subject();
 
-  const element = <Div>
+  const element = <Div mount={pair$}>
     {pair$.map(pair => pair && pair.map(entry => {
       const {element: EntryButton, events} = entryButton({
         entry,

@@ -11,19 +11,19 @@ const {div: Div, h1: H1, button: Button} = dom;
 export const results = (props$) => {
   const next$ = new Subject();
 
-  const resultsElement = <Div>
+  const resultsElement = <div>
     <Div>
     {props$.pluck('pair').map(pair => pair && pair.map(entry =>
       <div key={entry}>
         <h1>{entry}</h1>
         <Div>
-          {props$.pluck('tally', entry) || 0}
+          {props$.pluck('tally', entry).map(votes => votes || "0")}
         </Div>
       </div>
       ))}
     </Div>
-    <button onClick={next$.onNext.bind(next$)}>Next</button>
-  </Div>;
+    <button onClick={next$.onNext.bind(next$)}><h1>Next</h1></button>
+  </div>;
 
   return {
     element: <Div>

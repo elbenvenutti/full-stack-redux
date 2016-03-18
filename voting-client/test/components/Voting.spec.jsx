@@ -6,11 +6,24 @@ import {renderIntoDocument, findRenderedDOMComponentWithTag, scryRenderedDOMComp
 import {voting} from '../../src/components/Voting';
 import {expect} from 'chai';
 import {BehaviorSubject} from 'rx';
+import {dom} from 'react-reactive-class';
+
+const {div: Div} = dom;
+
+const subject = (values) => {
+  const output={};
+  Object.keys(values).forEach((key) => {
+    output[`${key}$`] = new BehaviorSubject(values[key]);
+  });
+  return output;
+};
+
+const wrapAndRenderIntoDocument = (element) => renderIntoDocument(<Div>{element}</Div>);
 
 describe('Voting', () => {
   it('should render a pair of buttons', () => {
-    const component = renderIntoDocument(
-      voting(new BehaviorSubject({ pair: ['aaa', 'bbb'] })).element
+    const component = wrapAndRenderIntoDocument(
+      voting(subject({pair: ['aaa', 'bbb'], hasVoted: null})).element
     );
 
     const buttons = scryRenderedDOMComponentsWithTag(component, 'button');
@@ -23,9 +36,9 @@ describe('Voting', () => {
     let votedWith;
     const vote = (entry) => votedWith = entry;
 
-    const {element, events} = voting(new BehaviorSubject({ pair: ['aaa', 'bbb'] }));
+    const {element, events} = voting(subject({pair: ['aaa', 'bbb'], hasVoted: null}));
     events.vote$.subscribe(entry => votedWith = entry);
-    const component = renderIntoDocument(element);
+    const component = wrapAndRenderIntoDocument(element);
 
     const buttons = scryRenderedDOMComponentsWithTag(component, 'button');
     Simulate.click(buttons[1]);
@@ -37,8 +50,8 @@ describe('Voting', () => {
   });
 
   it('should disable buttons when user has voted', () => {
-    const component = renderIntoDocument(
-      voting(new BehaviorSubject({ pair: ['aaa', 'bbb'], hasVoted: 'aaa' })).element
+    const component = wrapAndRenderIntoDocument(
+      voting(subject({ pair: ['aaa', 'bbb'], hasVoted: 'aaa' })).element
     );
     const buttons = scryRenderedDOMComponentsWithTag(component, 'button');
 
@@ -48,8 +61,8 @@ describe('Voting', () => {
   });
 
   it('should add a label to the voted entry', () => {
-    const component = renderIntoDocument(
-      voting(new BehaviorSubject({ pair: ['aaa', 'bbb'], hasVoted: 'bbb' })).element
+    const component = wrapAndRenderIntoDocument(
+      voting(subject({pair: ['aaa', 'bbb'], hasVoted: 'bbb'})).element
     );
     const buttons = scryRenderedDOMComponentsWithTag(component, 'button');
 
@@ -58,8 +71,8 @@ describe('Voting', () => {
   });
 
   it('should render just the winner when there is one', () => {
-    const component = renderIntoDocument(
-      voting(new BehaviorSubject({winner: 'abc'})).element
+    const component = wrapAndRenderIntoDocument(
+      voting({winner$: new BehaviorSubject('abc'), pair$: new BehaviorSubject([])}).element
     );
     const buttons = scryRenderedDOMComponentsWithTag(component, 'button');
 

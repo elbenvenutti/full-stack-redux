@@ -14,4 +14,9 @@ export const vote = (entry) => ({
 export const hashChange = (hash) => ({
   type: 'HASH_CHANGE',
   hash
-})
+});
+
+export const next = () =>({
+  type: 'NEXT',
+  meta: {remote: true}
+});

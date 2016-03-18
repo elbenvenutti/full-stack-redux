@@ -8,22 +8,22 @@ import * as actionCreators from './action_creators.js';
 import wrapIntoBehaviour from './utils/wrapIntoBehaviour';
 import reducer from './reducer';
 
-const createAppState = (initState, action$) =>
-  wrapIntoBehaviour(initState, action$.scan(reducer, initState));
+const initAppState = (initialState, action$) =>
+  wrapIntoBehaviour(initialState, action$.scan(reducer, initialState));
 
-const appActions$ = new Subject();
+window.appActions$ = new Subject();
 
-const appState$ = createAppState({
+const appState$ = initAppState({
   hash: location.hash
-}, appActions$);
+}, window.appActions$);
 
 const hashChange$ = Observable.fromEvent(window, 'hashchange');
-hashChange$.subscribe(hash => appActions$.onNext(actionCreators.hashChange(location.hash)));
+hashChange$.subscribe(hash => window.appActions$.onNext(actionCreators.hashChange(location.hash)));
 
 const socket = io(`${location.protocol}//${location.hostname}:8090`);
-socket.on('state', state => appActions$.onNext(actionCreators.setState(state)));
+socket.on('state', state => window.appActions$.onNext(actionCreators.setState(state)));
 
-appActions$.subscribe(action => {
+window.appActions$.subscribe(action => {
   if (action.meta && action.meta.remote) {
     socket.emit('action', action);
   }
@@ -32,9 +32,12 @@ appActions$.subscribe(action => {
 const {element: App, events} = app(appState$);
 
 events.vote$ && events.vote$.subscribe(entry => {
-  appActions$.onNext(actionCreators.vote(entry));
+  window.appActions$.onNext(actionCreators.vote(entry));
 });
 
+events.next$ && events.next$.subscribe(() => {
+  window.appActions$.onNext(actionCreators.next());
+})
 ReactDOM.render(
   App,
   document.getElementById('app')

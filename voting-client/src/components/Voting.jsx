@@ -3,14 +3,29 @@
 import React from 'react';
 import winner from './Winner';
 import vote from './Vote';
-import wrapIntoBehaviour from '../utils/wrapIntoBehaviour';
+import {dom} from 'react-reactive-class';
 
-export const voting = (props$) => {
-  return props$.getValue().winner ? winner(props$.pluck('winner')) : vote(props$);
+const {div: Div} = dom;
+
+export const voting = ({winner$, pair$, hasVoted$}) => {
+  const {element: winnerElement} = winner(winner$);
+  const {element: voteElement, events: voteEvents} = vote({pair$, hasVoted$});
+
+  return {
+    element: <div>
+      <Div mount={winner$}>
+        {winnerElement}
+      </Div>
+      <Div mount={!winner$}>
+        {voteElement}
+      </Div>
+    </div>,
+    events: voteEvents
+  }
 };
 
-export const votingContainer = (state$) => voting(wrapIntoBehaviour(null, state$.map(state => ({
-  pair: state.vote && state.vote.pair,
-  winner: state.winner,
-  hasVoted: state.hasVoted
-}))));
+export const votingContainer = state$ => voting({
+  pair$: state$.pluck('vote', 'pair'),
+  winner$: state$.pluck('winner'),
+  hasVoted$: state$.pluck('hasVoted')
+});
