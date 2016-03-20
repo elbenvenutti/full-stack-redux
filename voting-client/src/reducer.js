@@ -23,7 +23,7 @@ export default (state = {}, action) => {
       return resetVote(setState(state, action.state));
     case 'VOTE':
       return vote(state, action.entry);
-  case 'HASH_CHANGE':
+    case 'HASH_CHANGE':
       return Object.assign(state, {hash: action.hash});
   }
   return state;
